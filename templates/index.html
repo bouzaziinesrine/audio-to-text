@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio to Text</title>
+    <link rel="stylesheet" href="../style.css" type="text/css"/>
+</head>
+
+<body>
+    <h1>Convertir l'audio en texte</h1>
+    <form id="audioForm" action="/transcribe" method="post" enctype="multipart/form-data">
+        <input type="file" id="audioFile" name="audio" accept="audio/*" capture><br>
+        <label for="language">Sélectionnez la langue :</label>
+        <select id="language" name="language">
+            <option value="en">Anglais</option>
+            <option value="fr">Français</option>
+        </select><br>
+        <button type="submit">Transcrire</button>
+    </form>
+    <div id="transcript"></div>
+    <div id="wordList"></div>
+    <script>
+        document.getElementById('audioForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData();
+            formData.append('audio', document.getElementById('audioFile').files[0]);
+            formData.append('language', document.getElementById('language').value);
+    
+            fetch('/transcribe', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('transcript').innerText = data.error;
+                } else {
+                    document.getElementById('transcript').innerText = data.transcript;
+                    // Afficher les mots individuels
+                    var wordList = document.getElementById('wordList');
+                    wordList.innerHTML = ''; // Effacer le contenu précédent
+                    data.words.forEach(function(word) {
+                        var wordElement = document.createElement('span');
+                        wordElement.textContent = word + ' ';
+                        wordList.appendChild(wordElement);
+                    });
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
